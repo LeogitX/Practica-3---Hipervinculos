@@ -1,0 +1,71 @@
+name: Autograding Tests
+'on':
+  push:
+  repository_dispatch:
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    # Cachear node_modules
+    - name: Cache node_modules
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+    
+    - name: Instalar dependencias
+      run: npm install
+    
+    - name: Ejercicio 10 - Estructura y Página Principal
+      id: ejercicio-10
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Ejercicio 10 - Estructura y Página Principal
+        setup-command: ''
+        command: npm test tests/ejercicio/10-estructura-tienda.test.js
+        timeout: 10
+        max-score: 35
+    
+    - name: Ejercicio 11 - Catálogo y Páginas Informativas
+      id: ejercicio-11
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Ejercicio 11 - Catálogo y Páginas Informativas
+        setup-command: ''
+        command: npm test tests/ejercicio/11-paginas-tienda.test.js
+        timeout: 10
+        max-score: 35
+    
+    - name: Ejercicio 12 - Carrito de Compras
+      id: ejercicio-12
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Ejercicio 12 - Carrito de Compras
+        setup-command: ''
+        command: npm test tests/ejercicio/12-carrito-tienda.test.js
+        timeout: 10
+        max-score: 30
+    
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        EJERCICIO-10_RESULTS: "${{steps.ejercicio-10.outputs.result}}"
+        EJERCICIO-11_RESULTS: "${{steps.ejercicio-11.outputs.result}}"
+        EJERCICIO-12_RESULTS: "${{steps.ejercicio-12.outputs.result}}"
+      with:
+        runners: ejercicio-10,ejercicio-11,ejercicio-12
